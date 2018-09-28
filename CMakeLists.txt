@@ -96,6 +96,10 @@ set(LIBFIVE_BUILD_FROM_ROOT true)
 # Always build the kernel and test suite
 add_subdirectory(libfive)
 
+# Build my lazy test app
+add_subdirectory(app)
+
+
 if(GUILE_FOUND AND Qt5Core_FOUND)
     add_subdirectory(studio)
 endif(GUILE_FOUND AND Qt5Core_FOUND)
