@@ -46,10 +46,10 @@ var inputs = {
          }}}
 
 function printer(fn) {
-  var x0 = 0.0;
-  var y0 = 0.0;
-  var x1 = 10.0;
-  var y1 = 10.0;
+  var x0 = 0.01;
+  var y0 = 0.01;
+  var x1 = 20.0;
+  var y1 = 20.0;
   var n = 3;
   var dx = (x1 - x0) / n;
   var dy = (y1 - y0) / n;
@@ -57,8 +57,8 @@ function printer(fn) {
   var y = 0.0;
   for (var i = 0; i < n; ++ i) {
     for (var j = 0; j < n; ++j) {
-      x = i * dx;
-      y = j * dy;
+      x = x0 + i * dx;
+      y = y0 + j * dy;
       console.log("" + x.toFixed(3) + ", " + y.toFixed(3) + ": " + fn(x, y));
     }
   }
@@ -121,8 +121,9 @@ var outputs = {
 
          function f1(x, y) { return rp + ha - Math.sqrt(x*x + y*y); }
          function f2(x, y) { return Math.min(f1(x,y),(Math.PI+Math.atan2(y,x))%ap-(Math.sqrt(Math.pow(Math.max(rb,Math.sqrt(x*x+y*y))/rb,2)-1)-Math.acos(rb/Math.max(rb,Math.sqrt(x*x+y*y))))); }
+         function f3(x, y) { return Math.min(f2(x,y),-(Math.sqrt(Math.pow(Math.max(rb,Math.sqrt(x*x+y*y))/rb,2)-1)-Math.acos(rb/Math.max(rb,Math.sqrt(x*x+y*y))))-(-(ap/2+2*ai)+(Math.PI+Math.atan2(y,x))%ap)); }
 
-         printer(f2);
+         printer(f3);
 
          //
          // shapes

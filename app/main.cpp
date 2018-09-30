@@ -100,17 +100,17 @@ auto generate_gear(GearParams const& params) {
         auto t = std::make_shared<Kernel::Deck>(tree);
         Kernel::PointEvaluator e(t);
 
-        auto x0 = 0.0;
-        auto y0 = 0.0;
-        auto x1 = 10.0;
-        auto y1 = 10.0;
+        auto x0 = 0.01;
+        auto y0 = 0.01;
+        auto x1 = 20.0;
+        auto y1 = 20.0;
         auto n = 3;
         auto dx = (x1 - x0) / n;
         auto dy = (y1 - y0) / n;
         for (auto i = 0; i < n; ++i) {
             for (auto j = 0; j < n; ++j) {
-                auto x = i * dx;
-                auto y = j * dy;
+                auto x = x0 + i * dx;
+                auto y = y0 + j * dy;
                 std::cout << x << ", " << y << ": " << e.eval({x, y, 0.0}) << '\n';
             }
         }
@@ -125,8 +125,10 @@ auto generate_gear(GearParams const& params) {
     auto addendum_circle = r - (params.pitch_radius + params.addendum_height);
 
     auto f1 = (params.pitch_radius + params.addendum_height) - r;
+    auto f15 = mod((3.1415926 + atan2(y, x)), params.pitch_angle);
     auto f2 = min(f1, mod((3.1415926 + atan2(y, x)), params.pitch_angle) - (sqrt(pow(max(params.base_radius, sqrt(x*x+y*y))/params.base_radius, 2)-1) - acos(params.base_radius/max(params.base_radius,sqrt(x*x+y*y)))));
-    printer(f2);
+     auto f3 = min(f2,-(sqrt(pow(max(params.base_radius,sqrt(x*x+y*y))/params.base_radius,2)-1)-acos(params.base_radius/max(params.base_radius,sqrt(x*x+y*y))))-(-(params.pitch_angle/2+2*params.involute_angle)+mod((3.1415926+atan2(y,x)), params.pitch_angle)));
+    printer(f3);
 
 
 
