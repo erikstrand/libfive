@@ -9,8 +9,8 @@ public:
     void Free();
     void Allocate(int32_t width, int32_t height);
     png_bytep* row_pointers() { return row_pointers_; }
-    void Clear();
-    void SetPixel(int32_t x, int32_t y);
+    void SetPixel(int32_t x, int32_t y, uint8_t value = 255);
+    void SetAllPixelsBlack();
     void Write(char const* filename);
 
 private:
