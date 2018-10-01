@@ -47,7 +47,7 @@ void render(Kernel::Tree tree, char const* filename) {
     }
     
     png_writer.Write(filename);
-};
+}
 
 
 int main() {
@@ -112,20 +112,6 @@ int main() {
         //std::cout << filename << '\n';
         //std::cout << gear_params << '\n';
     }
-
-    // Debug: Check that angle shifting works
-    /*
-    gear_params.inputs.n_teeth = 6;
-    gear_params.inputs.module = 2;
-    gear_params.CalculateParams();
-    for (auto i = 0; i < 10; ++i) {
-        const auto angle = i * 0.1;
-        gear_params.inputs.angle = angle;
-        auto gear = generate_gear(gear_params);
-        auto filename = gear_name(6, 2, angle);
-        render(gear, filename.c_str());
-    }
-    */
 
     return 0;
 }

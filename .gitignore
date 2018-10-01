@@ -4,3 +4,6 @@ vcpkg
 
 .*.swp
 .*.swo
+
+.DS_Store
+
