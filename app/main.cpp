@@ -4,6 +4,7 @@
 #include "libfive.h"
 #include "libfive/solve/bounds.hpp"
 #include "libfive/render/brep/mesh.hpp"
+#include "png_writer.h"
 
 struct GearInputs {
     double module;
@@ -61,41 +62,6 @@ auto generate_gear(GearParams const& params) {
     auto y = Kernel::Tree::Y();
     auto z = Kernel::Tree::Z();
 
-    // ATTEMPT 1
-    // max <--> intersection    distances outside may be wrong
-    // min <--> union           distances inside may be wrong
-    // difference <--> max(shape, -tool)
-    /*
-    return sqrt(x * x) + (y * y) - 1;
-
-    // inner cylinder?
-    // must be inside tip
-    // var fn = `${rp}+${ha}-Math.sqrt(X*X+Y*Y)`
-    //auto fn1 = params.pitch_radius + params.addendum_height - sqrt(x * x + y * y);
-    auto fn1 = sqrt(x * x + y * y) - (params.pitch_radius + params.addendum_height);
-    //auto fn1 = r - (params.pitch_radius + params.addendum_height);
-
-     // angle must be above bottom involute
-     //var fn = Math.min(${fn},(Math.PI+Math.atan2(Y,X))%${ap}-(Math.sqrt(Math.pow(Math.max(${rb},Math.sqrt(X*X+Y*Y))/${rb},2)-1)-Math.acos(${rb}/Math.max(${rb},Math.sqrt(X*X+Y*Y)))))
-
-    // distance from center in units of base radius, capped below at 1
-    //auto dst1 = max(params.base_radius, r) / params.base_radius;
-    // hmm
-    //auto dst2 = sqrt(pow(dst1, 2) - 1);
-
-    //auto angle1 = acos(params.base_radius / min(params.base_radius, r));
-    //auto angle2 =  - angle1;
-    //auto fn2 = max(fn1, (Math.PI + atan2(y, x)) % params.pitch_angle - )
-    return fn1;
-
-     // angle must be below top involute
-     // var fn = `Math.min(${fn},-(Math.sqrt(Math.pow(Math.max(${rb},Math.sqrt(X*X+Y*Y))/${rb},2)-1)-Math.acos(${rb}/Math.max(${rb},Math.sqrt(X*X+Y*Y))))-(-${ap/2+2*ai}+(Math.PI+Math.atan2(Y,X))%${ap}))`
-
-     // root circle
-     // var fn = `Math.max(${fn},${rp-hd}-Math.sqrt(X*X+Y*Y))`
-     */
-
-
     auto printer = [&](auto tree) {
         auto t = std::make_shared<Kernel::Deck>(tree);
         Kernel::PointEvaluator e(t);
@@ -117,7 +83,6 @@ auto generate_gear(GearParams const& params) {
     };
 
 
-    // ATTEMPT 2
     auto r_squared = x * x + y * y;
     auto r = sqrt(r_squared);
     auto theta = atan2(y, x);
@@ -125,38 +90,57 @@ auto generate_gear(GearParams const& params) {
     auto addendum_circle = r - (params.pitch_radius + params.addendum_height);
 
     auto f1 = (params.pitch_radius + params.addendum_height) - r;
-    auto f15 = mod((3.1415926 + atan2(y, x)), params.pitch_angle);
-    auto f2 = min(f1, mod((3.1415926 + atan2(y, x)), params.pitch_angle) - (sqrt(pow(max(params.base_radius, sqrt(x*x+y*y))/params.base_radius, 2)-1) - acos(params.base_radius/max(params.base_radius,sqrt(x*x+y*y)))));
-     auto f3 = min(f2,-(sqrt(pow(max(params.base_radius,sqrt(x*x+y*y))/params.base_radius,2)-1)-acos(params.base_radius/max(params.base_radius,sqrt(x*x+y*y))))-(-(params.pitch_angle/2+2*params.involute_angle)+mod((3.1415926+atan2(y,x)), params.pitch_angle)));
-    printer(f3);
+    auto f2 = min(f1, mod((3.1415926 + atan2(y, x)), params.pitch_angle) - (sqrt(pow(max(params.base_radius, r)/params.base_radius, 2)-1) - acos(params.base_radius/max(params.base_radius,r))));
+    auto f3 = min(f2,-(sqrt(pow(max(params.base_radius,r)/params.base_radius,2)-1)-acos(params.base_radius/max(params.base_radius,r)))-(-(params.pitch_angle/2+2*params.involute_angle)+mod((3.1415926+atan2(y,x)), params.pitch_angle)));
 
-
-
-
-    auto dst_to_tangent = sqrt(r_squared - params.base_radius * params.base_radius);
-    auto angle_to_tangent = acos(params.base_radius / r);
-    auto involute = dst_to_tangent - params.base_radius * (theta + angle_to_tangent);
-    return involute;
-
-    // depends on theta, not r
-    auto tooth_pos = mod((3.1415926 + atan2(y, x)), params.pitch_angle);
-    // distance from center in units of base radius, capped below at 1
-    auto dst1 = max(params.base_radius, r) / params.base_radius;
-    // inverse of dst1
-    auto dst2 = params.base_radius / max(params.base_radius, r);
-    return tooth_pos + r - 5;
-
-    auto fn1 = (params.pitch_radius + params.addendum_height) - r;
-    //auto fn1 = r - (params.pitch_radius + params.addendum_height);
-    auto fn2 = -min(fn1, tooth_pos - (sqrt(pow(dst1, 2) - 1) - acos(dst2)));
-    //auto fn3 = min(fn2, -(sqrt(pow(max(params.base_radius, r) / params.base_radius, 2) - 1) - acos(params.base_radius / max(params.base_radius, r))) - (-(params.pitch_angle / 2 + 2 * params.involute_angle) + mod((3.1415926 + atan2(y, x)), params.pitch_angle)));
-    //auto fn4 = max(fn3, (params.pitch_radius - params.dedendum_height) - r);
-    return fn2;
+    auto f4 = max(f3, params.pitch_radius - params.dedendum_height - r);
+    printer(f4);
+    return -f4;
 }
 
 Kernel::Tree extrude(Kernel::Tree tree, float lower, float upper) {
     return max(tree, max(lower - Kernel::Tree::Z(), Kernel::Tree::Z() - upper));
 }
+
+void render(Kernel::Tree tree, char const* filename) {
+    std::cout << "render 1\n";
+    auto t = std::make_shared<Kernel::Deck>(tree);
+    std::cout << "render 2\n";
+    Kernel::PointEvaluator e(t);
+    std::cout << "render 3\n";
+
+    auto x0 = -10.0;
+    auto y0 = -10.0;
+    auto x1 = 10.0;
+    auto y1 = 10.0;
+    auto n_pixels_per_axis = 100;
+
+    std::cout << "render 4\n";
+    PngWriter png_writer;
+    std::cout << "render 5\n";
+    png_writer.Allocate(n_pixels_per_axis, n_pixels_per_axis);
+    std::cout << "render 6\n";
+    png_writer.Clear();
+    std::cout << "render 7\n";
+
+    auto dx = (x1 - x0) / n_pixels_per_axis;
+    auto dy = (y1 - y0) / n_pixels_per_axis;
+    for (auto i = 0; i < n_pixels_per_axis; ++i) {
+        auto x = x0 + (i + 0.5) * dx;
+        for (auto j = 0; j < n_pixels_per_axis; ++j) {
+            auto y = y0 + (j + 0.5) * dy;
+            auto value = e.eval({x, y, 0.5});
+            if (value < 0) {
+                png_writer.SetPixel(i, j);
+            }
+            //std::cout << x << ", " << y << ": " << value << '\n';
+        }
+    }
+    std::cout << "render 8\n";
+    
+    png_writer.Write(filename);
+};
+
 
 int main() {
     // Unlike the C bindings, the C++ interface manages memory automatically
@@ -167,7 +151,7 @@ int main() {
     auto z = Kernel::Tree::Z();
 
     // Arithemetic is overloaded for the Kernel::Tree type
-    auto sphere = (x * x) + (y * y) + (z * z) - 1;
+    auto sphere = (x * x) + (y * y) + (z * z) - 30;
     auto infinite_cylinder = sqrt(x * x) + (y * y) - 1;
     auto cylinder = extrude(infinite_cylinder, 0, 1);
 
@@ -182,6 +166,9 @@ int main() {
 
     auto infinite_something = generate_gear(gear_params);
     auto something = extrude(infinite_something, 0, 1);
+    std::cout << "prerender\n";
+    render(something, "gear.png");
+    std::cout << "postrender\n";
 
     // Automatically find the bounds of the sphere, using
     // a function that's only available in the C++ API!

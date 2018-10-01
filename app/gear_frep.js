@@ -122,8 +122,9 @@ var outputs = {
          function f1(x, y) { return rp + ha - Math.sqrt(x*x + y*y); }
          function f2(x, y) { return Math.min(f1(x,y),(Math.PI+Math.atan2(y,x))%ap-(Math.sqrt(Math.pow(Math.max(rb,Math.sqrt(x*x+y*y))/rb,2)-1)-Math.acos(rb/Math.max(rb,Math.sqrt(x*x+y*y))))); }
          function f3(x, y) { return Math.min(f2(x,y),-(Math.sqrt(Math.pow(Math.max(rb,Math.sqrt(x*x+y*y))/rb,2)-1)-Math.acos(rb/Math.max(rb,Math.sqrt(x*x+y*y))))-(-(ap/2+2*ai)+(Math.PI+Math.atan2(y,x))%ap)); }
+         function f4(x, y) { return Math.max(f3(x, y),rp-hd-Math.sqrt(x*x+y*y)); }
 
-         printer(f3);
+         printer(f4);
 
          //
          // shapes
