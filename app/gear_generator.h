@@ -3,10 +3,12 @@
 #include "libfive.h"
 
 struct GearInputs {
-    double module;
-    double addendum;
-    double dedendum;
-    double pressure_angle;
+    float module;
+    float addendum;
+    float dedendum;
+    float pressure_angle;
+    // value between 0 and 1, interpolates between original position and minimum angular
+    // displacement that achieves symmetry
     uint32_t n_teeth;
 };
 
@@ -17,18 +19,19 @@ struct GearParams {
     }
 
     void CalculateParams();
+    float Width();
 
     GearInputs inputs;
 
-    double pitch_radius;
-    double base_radius;
-    double addendum_height;
-    double dedendum_height;
-    double involute_angle;
-    double pitch_angle;
+    float pitch_radius;
+    float base_radius;
+    float addendum_height;
+    float dedendum_height;
+    float involute_angle;
+    float pitch_angle;
 
-    double outer_radius;
-    double root_radius;
+    float outer_radius;
+    float root_radius;
 };
 
 std::ostream& operator<<(std::ostream& os, GearParams const& params);

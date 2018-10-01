@@ -10,6 +10,10 @@ void GearParams::CalculateParams() {
     pitch_angle = 6.28318530718 / inputs.n_teeth;
 }
 
+float GearParams::Width() {
+    return 2 * (pitch_radius + addendum_height);
+}
+
 std::ostream& operator<<(std::ostream& os, GearParams const& params) {
     os << "module " << params.inputs.module << '\n';
     os << "addendum " << params.inputs.addendum << '\n';
