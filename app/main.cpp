@@ -58,7 +58,7 @@ int main() {
     auto rand_gen = std::mt19937(seed);
 
     // Create distrubutions from which to sample gear parameters.
-    // For now we vary number of teeth and modulus.
+    // For now we vary number of teeth, modulus, and angle.
     constexpr auto min_teeth = 8;
     constexpr auto max_teeth = 24;
     auto teeth_distribution = std::uniform_int_distribution<uint32_t>(min_teeth, max_teeth);
@@ -79,6 +79,7 @@ int main() {
         std::cout << n_teeth << " teeth, min mod " << min_modulus << " max mod " << max_modulus << '\n';
         modulus_distributions[i] = std::uniform_real_distribution<float>(min_modulus, max_modulus);
     }
+    auto angle_distribution = std::uniform_real_distribution<float>(0.0, 1.0);
 
     // Helpful things.
     constexpr auto n_samples = 100;
@@ -97,36 +98,31 @@ int main() {
     for (auto i = 0; i < n_samples; ++i) {
         const auto n_teeth = teeth_distribution(rand_gen);
         const auto modulus = modulus_distributions[n_teeth - min_teeth](rand_gen);
+        const auto angle = angle_distribution(rand_gen);
 
         gear_params.inputs.n_teeth = n_teeth;
         gear_params.inputs.module = modulus;
+        gear_params.inputs.angle = angle;
         gear_params.CalculateParams();
         const auto gear = generate_gear(gear_params);
 
-        const auto filename = gear_name(n_teeth, modulus, 0);
-        //render(gear, filename.c_str());
+        const auto filename = gear_name(n_teeth, modulus, angle);
+        render(gear, filename.c_str());
 
         //std::cout << filename << '\n';
         //std::cout << gear_params << '\n';
     }
 
-    // Debug: Check modulus bounds.
+    // Debug: Check that angle shifting works
     /*
-    for (auto i = min_teeth; i < max_teeth; ++i) {
-        gear_params.inputs.n_teeth = i;
-
-        auto modulus = std::max(global_min_modulus, min_inner_radius / (0.5f * i - 1.1f));
-        gear_params.inputs.module = modulus;
-        gear_params.CalculateParams();
+    gear_params.inputs.n_teeth = 6;
+    gear_params.inputs.module = 2;
+    gear_params.CalculateParams();
+    for (auto i = 0; i < 10; ++i) {
+        const auto angle = i * 0.1;
+        gear_params.inputs.angle = angle;
         auto gear = generate_gear(gear_params);
-        auto filename = gear_name(i, modulus, 0);
-        render(gear, filename.c_str());
-
-        modulus = max_outer_radius / (0.5f * i + 1.0f);
-        gear_params.inputs.module = modulus;
-        gear_params.CalculateParams();
-        gear = generate_gear(gear_params);
-        filename = gear_name(i, modulus, 0);
+        auto filename = gear_name(6, 2, angle);
         render(gear, filename.c_str());
     }
     */

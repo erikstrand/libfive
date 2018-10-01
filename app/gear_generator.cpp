@@ -32,14 +32,16 @@ std::ostream& operator<<(std::ostream& os, GearParams const& params) {
 Kernel::Tree generate_gear(GearParams const& params) {
     auto x = Kernel::Tree::X();
     auto y = Kernel::Tree::Y();
-    auto z = Kernel::Tree::Z();
 
     auto r_squared = x * x + y * y;
     auto r = sqrt(r_squared);
 
+    const auto angle_delta = params.inputs.angle * params.pitch_angle;
+    auto angle = atan2(y, x) + angle_delta;
+
     auto f1 = (params.pitch_radius + params.addendum_height) - r;
-    auto f2 = min(f1, mod((3.1415926 + atan2(y, x)), params.pitch_angle) - (sqrt(pow(max(params.base_radius, r)/params.base_radius, 2)-1) - acos(params.base_radius/max(params.base_radius,r))));
-    auto f3 = min(f2,-(sqrt(pow(max(params.base_radius,r)/params.base_radius,2)-1)-acos(params.base_radius/max(params.base_radius,r)))-(-(params.pitch_angle/2+2*params.involute_angle)+mod((3.1415926+atan2(y,x)), params.pitch_angle)));
+    auto f2 = min(f1, mod((3.1415926f + angle), params.pitch_angle) - (sqrt(pow(max(params.base_radius, r)/params.base_radius, 2)-1) - acos(params.base_radius/max(params.base_radius,r))));
+    auto f3 = min(f2,-(sqrt(pow(max(params.base_radius,r)/params.base_radius,2)-1)-acos(params.base_radius/max(params.base_radius,r)))-(-(params.pitch_angle/2+2*params.involute_angle)+mod((3.1415926f + angle), params.pitch_angle)));
 
     auto f4 = max(f3, params.pitch_radius - params.dedendum_height - r);
     return -extrude(f4, -1, 1);

@@ -9,6 +9,7 @@ struct GearInputs {
     float pressure_angle;
     // value between 0 and 1, interpolates between original position and minimum angular
     // displacement that achieves symmetry
+    float angle;
     uint32_t n_teeth;
 };
 
